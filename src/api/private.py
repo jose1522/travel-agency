@@ -9,25 +9,39 @@ private = APIRouter()
 ################################################################
 # User-related endpoints
 ################################################################
-
-@private.post('/user')
-async def new_user(user: UserParams):
-    result = await model.User.createUser(user)
-    return result
-
-
-@private.get('/user')
+@private.get('/user', tags=['User'])
 async def get_user(user=Depends(check_jwt)):
     return user
 
 
-@private.put('/user')
+@private.put('/user', tags=['User'])
 async def update_user(data: UserParams, user=Depends(check_jwt)):
     result = await model.User.updateUser(user, data)
     return result
 
 
-@private.delete('/user')
+@private.delete('/user', tags=['User'])
 async def delete_user(user=Depends(check_jwt)):
     result = await model.User.deleteUser(user)
+    return result
+
+################################################################
+# User-related endpoints
+################################################################
+
+@private.post('/user-info', tags=['User Info'])
+async def new_user(data: UserInfoParams, user=Depends(check_jwt)):
+    result = await model.UserInfo.createUserInfo(data, user)
+    return result
+
+
+@private.get('/user-info', tags=['User Info'])
+async def get_user(user=Depends(check_jwt)):
+    result = await model.UserInfo.searchUsername(user)
+    return result
+
+
+@private.put('/user-info', tags=['User Info'])
+async def update_user(data: UserInfoParams, user=Depends(check_jwt)):
+    result = await model.UserInfo.updateUserInfo(user, data)
     return result

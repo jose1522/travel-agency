@@ -5,9 +5,8 @@ from core.security.router_dependencies import *
 
 
 def create_app():
-    app = FastAPI()
+    app = FastAPI(title="Travel Agency", version="0.1")
     app.include_router(private,
-                       tags=['Private'],
                        prefix='/secure',
                        dependencies=[Depends(check_jwt)],
                        responses={404: {"description": "Not found"}})

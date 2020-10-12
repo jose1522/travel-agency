@@ -22,8 +22,7 @@ class CRUD:
         else:
             return None
 
-    def create(self, data: BaseModel, msg: Message) -> None:
-        data = dict(data)
+    def create(self, data: dict, msg: Message) -> None:
         self.documents = self.cls()
         for key, value in data.items():
             if value is not None:
