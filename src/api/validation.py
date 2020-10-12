@@ -3,7 +3,7 @@ from typing import Optional
 
 
 class UserParams(BaseModel):
-    name: str
+    username: str
     password: str
 
 

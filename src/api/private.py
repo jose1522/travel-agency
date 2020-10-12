@@ -2,14 +2,8 @@ from fastapi import APIRouter, Depends, Path
 from api.validation import *
 from database import model
 from core.security.router_dependencies import check_jwt
-from typing import Optional
 
 private = APIRouter()
-
-
-@private.get('/hello')
-async def index(name: str = Path(..., title="Your name", min_length=2, max_length=10)):
-    return {"hello": name}
 
 
 ################################################################

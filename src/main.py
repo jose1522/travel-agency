@@ -7,7 +7,7 @@ app = create_app()
 
 
 def startAPI():
-    if settings.API_USE_SSL:
+    if not settings.API_USE_SSL:
         uvicorn.run(
             "main:app",
             port=settings.API_PORT,
