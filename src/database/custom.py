@@ -1,7 +1,8 @@
 from core.security.sanitizer import Sanitizer
 from core.security.authentication import get_hash
 from core.security.encryption import Cipher, EncryptedString, HashedString
-from mongoengine import StringField, BooleanField, Document, DateField, QuerySet, queryset_manager
+from mongoengine import StringField, BooleanField, Document, DateField, QuerySet, queryset_manager, DateTimeField, MultipleObjectsReturned
+
 from datetime import datetime
 import logging
 import json
@@ -49,7 +50,7 @@ class BaseDocument(Document):
     }
 
     @queryset_manager
-    def query(cls,
+    def query(self,
               queryset,
               query: dict,
               sortParams: list = None,
@@ -61,6 +62,9 @@ class BaseDocument(Document):
 
         data = queryset.filter(**query)
 
+        if exclude is not None:
+            data = data.exclude(*exclude)
+
         if skip is not None:
             data = data.skip(skip)
 
@@ -70,16 +74,15 @@ class BaseDocument(Document):
         if sortParams is not None:
             data = data.order_by(*sortParams)
 
-        if exclude is not None:
-            data = data.exclude(*exclude)
-
         if only is not None:
             data = data.only(*only)
 
         try:
             data = data.get()
-        except:
-            data = data.all()
+        except MultipleObjectsReturned:
+            data = list(data)
+        except Exception as e:
+            logging.exception(str(e))
         finally:
             return data
 

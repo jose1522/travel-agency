@@ -12,3 +12,4 @@ PyYAML
 bleach
 cryptography
 python-multipart
+pillow

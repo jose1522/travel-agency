@@ -13,3 +13,15 @@ async def check_jwt(token: str = Depends(oauth2_scheme)):
         return data
     except Exception as e:
         raise HTTPException(status_code=401, detail='Authentication Error')
+
+
+async def check_admin_jwt(token: str = Depends(oauth2_scheme)):
+    try:
+        data = await get_current_user(token)
+        if not data.get("isAdmin"):
+            raise HTTPException(status_code=403, detail='Access Restricted')
+        return data
+    except HTTPException:
+        raise
+    except Exception:
+        raise HTTPException(status_code=401, detail='Authentication Error')
