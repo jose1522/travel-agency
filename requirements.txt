@@ -13,3 +13,4 @@ bleach
 cryptography
 python-multipart
 pillow
+mongoengine_goodjson

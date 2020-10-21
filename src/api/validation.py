@@ -20,7 +20,7 @@ class UserInfoGetOutput(BaseModel):
     identification: str
     full_name: str
     email: str
-    birthday: date
+    birthday: str
     phone: str
     _createdOn: dict
     _active: bool
@@ -45,7 +45,7 @@ class HotelParams(NewHotelParams):
     id: str
 
 
-class NewRoomType(BaseModel):
+class NewRoomTypeParams(BaseModel):
     name: str
     hotel: str
     amenities: List[str]
@@ -54,7 +54,56 @@ class NewRoomType(BaseModel):
     description: Optional[str]
 
 
-class RoomType(NewRoomType):
+class RoomTypeParams(NewRoomTypeParams):
+    id: str
+
+
+class NewRoomParams(BaseModel):
+    hotel: str
+    number: int
+    room_type: str
+    available: Optional[bool]
+
+
+class RoomParams(NewRoomParams):
+    id: str
+
+
+class NewRoomReservationParams(BaseModel):
+    user: str
+    room: str
+    start: date
+    end: date
+
+
+class RoomReservationParams(NewRoomReservationParams):
+    id: str
+
+
+class NewCarTypeParams(BaseModel):
+    name: str
+    drive: str
+    category: str
+    engine: str
+    capacity: int
+
+
+class CarTypeParams(NewCarTypeParams):
+    id: str
+
+
+class NewCarParams(BaseModel):
+    brand: str
+    model: str
+    car_type: str
+    color: str
+    year: int
+    millage: float
+    license_plate: str
+    available: Optional[bool]
+
+
+class CarParams(NewCarParams):
     id: str
 
 

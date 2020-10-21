@@ -2,7 +2,7 @@ import json
 from pydantic import BaseModel
 from api.messages import Message
 from datetime import datetime
-
+from mongoengine import DoesNotExist
 
 class CRUD:
 
@@ -10,23 +10,24 @@ class CRUD:
         self.cls = cls
         self.documents = None
 
-    def toJSON(self):
+    def toJSON(self, expand: list = None):
         if self.documents is not None:
             if isinstance(self.documents, list):
                 myArr = []
                 for doc in self.documents:
-                    myArr.append(doc.to_dict())
+                    myArr.append(doc.to_dict(expand=expand))
                 return myArr
             else:
-                return self.documents.to_dict()
+                return self.documents.to_dict(expand=expand)
         else:
             return None
 
     def create(self, data: dict, msg: Message) -> None:
-        self.documents = self.cls()
-        for key, value in data.items():
-            if value is not None:
-                self.documents.__setattr__(key, value)
+        # self.documents = self.cls()
+        # for key, value in data.items():
+        #     if value is not None:
+        #         self.documents.__setattr__(key, value)
+        self.documents = self.cls(**data)
         self.documents.save()
         msg.addMessage('Created', self.toJSON())
 
@@ -72,6 +73,9 @@ class CRUD:
                                 skip=skip,
                                 exclude=exclude,
                                 only=only)
+        if result is None:
+            raise DoesNotExist
+
         if not isinstance(result, list):
             result = [result]
         self.documents = result

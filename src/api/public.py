@@ -26,7 +26,7 @@ async def authenticate(user: UserParams):
 
 @public.post('/user')
 async def new_user(user: UserParams):
-    result = await model.User.createUser(user)
+    result = await model.User.createRecord(user)
     return result
 
 
