@@ -1,5 +1,5 @@
 from fastapi import FastAPI, Depends, Request
-from mongoengine import DoesNotExist, ValidationError
+from mongoengine import DoesNotExist, ValidationError, NotUniqueError
 from fastapi.responses import JSONResponse
 from api.private import private
 from api.public import public
@@ -28,6 +28,13 @@ def create_app():
         return JSONResponse(
             status_code=400,
             content={"message": f"Oops! It looks like the information received didn't have the correct format."},
+        )
+
+    @app.exception_handler(NotUniqueError)
+    async def not_unique_exception_handler(request: Request, exc: NotUniqueError):
+        return JSONResponse(
+            status_code=400,
+            content={"message": f"Oops! It looks like you are submitting a duplicate value."},
         )
 
     return app

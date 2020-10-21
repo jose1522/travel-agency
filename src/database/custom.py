@@ -1,7 +1,7 @@
 from core.security.sanitizer import Sanitizer
 from core.security.authentication import get_hash
 from core.security.encryption import Cipher, EncryptedString, HashedString
-from mongoengine import StringField, BooleanField, Document, DateField, QuerySet, queryset_manager, DateTimeField, MultipleObjectsReturned, DoesNotExist, ValidationError
+from mongoengine import StringField, BooleanField, Document, DateField, QuerySet, queryset_manager, DateTimeField, MultipleObjectsReturned, DoesNotExist, ValidationError, NotUniqueError
 import mongoengine_goodjson as gj
 from database.controller import CRUD
 from api.messages import Message
@@ -57,6 +57,12 @@ class BaseDocument(gj.Document):
         crud = CRUD(cls=cls)
         try:
             crud.create(kwargs, msg)
+        except NotUniqueError as e:
+            logging.error(str(e))
+            raise
+        except ValidationError as e:
+            logging.error(str(e))
+            raise ValidationError
         except Exception as e:
             msg.addMessage('Error', str(e))
             raise
@@ -71,6 +77,9 @@ class BaseDocument(gj.Document):
             return data
         except DoesNotExist:
             raise
+        except ValidationError as e:
+            logging.error(str(e))
+            raise ValidationError
         except Exception as e:
             logging.error(str(e))
             raise
@@ -85,6 +94,11 @@ class BaseDocument(gj.Document):
             crud.read(query=query)
             crud.delete(msg)
             return msg.data
+        except DoesNotExist:
+            raise
+        except ValidationError as e:
+            logging.error(str(e))
+            raise ValidationError
         except Exception as e:
             raise e
 
@@ -94,10 +108,17 @@ class BaseDocument(gj.Document):
         crud = CRUD(cls=cls)
         try:
             query = {"id": kwargs.get('id'), 'active': True}
-            exclude = ['id']
+            exclude = cls._meta.get("exclude_from_update", [])
+            if 'id' not in exclude:
+                exclude.append('id')
             crud.read(query=query)
             crud.update(kwargs, msg, exclude=exclude)
             return msg.data
+        except DoesNotExist:
+            raise
+        except ValidationError as e:
+            logging.error(str(e))
+            raise ValidationError
         except Exception as e:
             msg.addMessage('Error', str(e))
             raise

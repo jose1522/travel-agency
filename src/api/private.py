@@ -132,7 +132,8 @@ async def get_room_type(user=Depends(check_jwt),
 
 @private.put('/room-type', tags=['Room Type'])
 async def update_room_type(data: RoomTypeParams, user=Depends(check_admin_jwt)):
-    result = await model.RoomType.updateRecord(data)
+    data = dict(data)
+    result = await model.RoomType.updateRecord(**data)
     return result
 
 

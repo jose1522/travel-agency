@@ -23,10 +23,6 @@ class CRUD:
             return None
 
     def create(self, data: dict, msg: Message) -> None:
-        # self.documents = self.cls()
-        # for key, value in data.items():
-        #     if value is not None:
-        #         self.documents.__setattr__(key, value)
         self.documents = self.cls(**data)
         self.documents.save()
         msg.addMessage('Created', self.toJSON())

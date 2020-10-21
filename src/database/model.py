@@ -12,7 +12,8 @@ class User(BaseDocument):
     isAdmin = BooleanField(default=False)
 
     meta = {
-        'indexes': ['username']
+        'indexes': ['username'],
+        'exclude_from_update': ['username', 'password']
     }
 
     @classmethod
@@ -25,6 +26,9 @@ class User(BaseDocument):
             return msg.data
         except DoesNotExist:
             raise
+        except NotUniqueError as e:
+            logging.error(str(e))
+            raise
         except Exception as e:
             msg.addMessage('Error', str(e))
             raise
@@ -36,7 +40,9 @@ class User(BaseDocument):
         try:
             currentUser = dict(currentUser)
             query = {"username": currentUser.get('username')}
-            exclude = ['username', 'id']
+            exclude = cls._meta.get("exclude_from_update", [])
+            if 'id' not in exclude:
+                exclude.append('id')
             crud.read(query=query)
             crud.update(newData, msg, exclude=exclude)
             return msg.data
@@ -74,7 +80,6 @@ class User(BaseDocument):
         finally:
             return msg.data
 
-
     @classmethod
     async def searchUsername(cls, username: str, include_pwd: bool = False) -> dict:
         try:
@@ -83,8 +88,6 @@ class User(BaseDocument):
                 data = cls.query(query=query)
             else:
                 data = cls.query(exclude=['password'], query=query)
-            # if len(data):
-            #     data = data.to_dict()
             data = data.to_dict()
             return data
         except DoesNotExist:
@@ -106,7 +109,6 @@ class User(BaseDocument):
             logging.error(str(e))
             raise
 
-
     @classmethod
     async def testSearch(cls):
         try:
@@ -120,8 +122,6 @@ class User(BaseDocument):
             logging.error(str(e))
             raise
 
-
-
 class UserInfo(BaseDocument):
     user_id = StringField(unique=True, required=True)
     identification = StringField(required=True, min_length=5, max_length=25)
@@ -131,7 +131,8 @@ class UserInfo(BaseDocument):
     phone = StringField(min_length=5, max_length=20)
 
     meta = {
-        'indexes': ['user_id']
+        'indexes': ['user_id'],
+        'exclude_from_update': ['user_id', 'id']
     }
 
     @classmethod
@@ -155,7 +156,6 @@ class UserInfo(BaseDocument):
         user = dict(user)
         try:
             user = await User.searchUsername(user['username'])
-            # user = extractIDValue(user)
             query = {"user_id": user['id'], 'active': True}
             data = cls.query(exclude=['user_id'], query=query)
             data = data.to_dict()
@@ -199,7 +199,9 @@ class UserInfo(BaseDocument):
         user = dict(user)
         try:
             query = {"user_id": user.get('id'), 'active': True}
-            exclude = ['user_id', 'id']
+            exclude = cls._meta.get("exclude_from_update", [])
+            if 'id' not in exclude:
+                exclude.append('id')
             crud.read(query=query)
             crud.update(newData, msg, exclude=exclude)
             return msg.data
@@ -238,12 +240,16 @@ class Hotel(BaseDocument):
 
 
 class RoomType(BaseDocument):
-    name = StringField(required=True)
+    name = StringField(required=True, unique_with=['hotel'])
     hotel = ReferenceField(Hotel)
     amenities = ListField()
     price = FloatField(required=True)
     capacity = IntField(default=2, min_value=1, max_value=10)
     description = StringField()
+
+    meta = {
+        'exclude_from_update': ['hotel', 'id']
+    }
 
     @classmethod
     async def createRecord(cls, newRoomType: NewRoomTypeParams):
@@ -256,6 +262,12 @@ class RoomType(BaseDocument):
             crud.create(newRoomType, msg)
             return msg.data
         except DoesNotExist:
+            raise
+        except ValidationError as e:
+            logging.error(str(e))
+            raise ValidationError
+        except NotUniqueError as e:
+            logging.error(str(e))
             raise
         except Exception as e:
             msg.addMessage('Error', str(e))
@@ -305,6 +317,12 @@ class RoomReservation(BaseDocument):
             crud.create(room, msg)
             return msg.data
         except DoesNotExist:
+            raise
+        except ValidationError as e:
+            logging.error(str(e))
+            raise ValidationError
+        except NotUniqueError as e:
+            logging.error(str(e))
             raise
         except Exception as e:
             msg.addMessage('Error', str(e))
