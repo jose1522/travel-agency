@@ -4,6 +4,7 @@ from api.messages import Message
 from datetime import datetime
 from mongoengine import DoesNotExist
 
+
 class CRUD:
 
     def __init__(self, cls):

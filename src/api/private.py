@@ -72,7 +72,6 @@ async def get_hotel(
                     limit: Optional[int] = Query(None, title="Limit to (n) results"),
                     user=Depends(check_jwt)
 ):
-    # result = await model.Hotel.searchHotel(hotel)
     kwargs = {}
     if hotel_id:
         kwargs["id"] = hotel_id

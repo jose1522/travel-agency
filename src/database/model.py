@@ -5,10 +5,17 @@ from database.controller import CRUD
 from database.custom import *
 import json
 
+from mongoengine import *
+from api.messages import *
+from core.security.authentication import *
+from database.controller import CRUD
+from database.custom import *
+import json
+
 
 class User(BaseDocument):
     username = StringField(max_length=120, required=True, unique=True)
-    password = PasswordStringField(max_length=120, required=True)
+    password = StringField(max_length=120, required=True)
     isAdmin = BooleanField(default=False)
 
     meta = {
@@ -22,6 +29,7 @@ class User(BaseDocument):
         crud = CRUD(cls=cls)
         try:
             newUser = dict(newUser)
+            newUser['password'] = get_hash(newUser['password'])
             crud.create(newUser, msg)
             return msg.data
         except DoesNotExist:
@@ -121,6 +129,7 @@ class User(BaseDocument):
         except Exception as e:
             logging.error(str(e))
             raise
+
 
 class UserInfo(BaseDocument):
     user_id = StringField(unique=True, required=True)
@@ -393,5 +402,4 @@ class Reservation(BaseDocument):
     user = ReferenceField(User)
     hotel_reservation = ListField(ReferenceField(RoomReservation))
     car_reservation = ListField(ReferenceField(CarReservation))
-
 
