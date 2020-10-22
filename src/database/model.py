@@ -21,6 +21,7 @@ class User(BaseDocument):
     meta = {
         'indexes': ['username'],
         'exclude_from_update': ['username', 'password']
+        
     }
 
     @classmethod
