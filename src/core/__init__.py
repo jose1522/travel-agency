@@ -1,6 +1,7 @@
 from fastapi import FastAPI, Depends, Request
 from mongoengine import DoesNotExist, ValidationError, NotUniqueError
 from fastapi.responses import JSONResponse
+from database import RoomNotAvailableError
 from api.private import private
 from api.public import public
 from core.security.router_dependencies import *
@@ -35,6 +36,13 @@ def create_app():
         return JSONResponse(
             status_code=400,
             content={"message": f"Oops! It looks like you are submitting a duplicate value."},
+        )
+
+    @app.exception_handler(RoomNotAvailableError)
+    async def not_unique_exception_handler(request: Request, exc: NotUniqueError):
+        return JSONResponse(
+            status_code=204,
+            content={"message": f"Oops! It looks like the room selected is no longer available."},
         )
 
     return app

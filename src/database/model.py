@@ -10,6 +10,7 @@ from api.messages import *
 from core.security.authentication import *
 from database.controller import CRUD
 from database.custom import *
+from database import RoomNotAvailableError
 import json
 
 
@@ -21,7 +22,6 @@ class User(BaseDocument):
     meta = {
         'indexes': ['username'],
         'exclude_from_update': ['username', 'password']
-        
     }
 
     @classmethod
@@ -134,8 +134,8 @@ class User(BaseDocument):
 
 class UserInfo(BaseDocument):
     user_id = StringField(unique=True, required=True)
-    identification = StringField(required=True, min_length=5, max_length=25)
-    full_name = StringField(required=True, max_length=50, min_length=3)
+    identification = EncryptedStringField(required=True, min_length=5, max_length=25)
+    full_name = EncryptedStringField(required=True, max_length=50, min_length=3)
     email = EmailField(required=True, unique=True, min_length=5, max_length=100)
     birthday = DateField(required=True)
     phone = StringField(min_length=5, max_length=20)
@@ -314,18 +314,28 @@ class RoomReservation(BaseDocument):
     start = DateField(required=True)
     end = DateField(required=True)
 
+    meta = {
+        'exclude_from_update': ['room']
+    }
+
     @classmethod
     async def createRecord(cls, room: NewRoomReservationParams):
         msg = Message()
         crud = CRUD(cls=cls)
         try:
             roomDoc = model.Room.objects.get(id=room.room)
+            if not roomDoc.available:
+                raise RoomNotAvailableError
+            else:
+                roomDoc.update(available=False)
             userDoc = model.User.objects.get(id=room.user)
             room = dict(room)
             room['room'] = roomDoc.id
             room['user'] = userDoc.id
             crud.create(room, msg)
             return msg.data
+        except RoomNotAvailableError:
+            raise
         except DoesNotExist:
             raise
         except ValidationError as e:
@@ -337,6 +347,25 @@ class RoomReservation(BaseDocument):
         except Exception as e:
             msg.addMessage('Error', str(e))
             raise
+
+    @classmethod
+    async def deleteRecord(cls, objectID: str) -> None:
+        msg = Message()
+        crud = CRUD(cls=cls)
+        try:
+            query = {"id": objectID, 'active': True}
+            crud.read(query=query)
+            crud.delete(msg)
+            roomDoc = Room.objects.get(id=crud.documents.room)
+            roomDoc.update(available=True)
+            return msg.data
+        except DoesNotExist:
+            raise
+        except ValidationError as e:
+            logging.error(str(e))
+            raise ValidationError
+        except Exception as e:
+            raise e
 
 
 class CarType(BaseDocument):
@@ -355,6 +384,32 @@ class CarBrand(BaseDocument):
 class CarModel(BaseDocument):
     name = StringField(required=True)
     brand = ReferenceField(CarBrand)
+
+    meta = {
+        'exclude_from_update': ['brand']
+    }
+
+    @classmethod
+    async def createRecord(cls, model: NewCarModelParams):
+        msg = Message()
+        crud = CRUD(cls=cls)
+        try:
+            carBrand = CarBrand.objects.get(id=model.brand)
+            model = dict(model)
+            model['brand'] = carBrand.id
+            crud.create(model, msg)
+            return msg.data
+        except DoesNotExist:
+            raise
+        except ValidationError as e:
+            logging.error(str(e))
+            raise ValidationError
+        except NotUniqueError as e:
+            logging.error(str(e))
+            raise
+        except Exception as e:
+            msg.addMessage('Error', str(e))
+            raise
 
 
 class Car(BaseDocument):
@@ -398,9 +453,54 @@ class CarReservation(BaseDocument):
     start = DateField(required=True)
     end = DateField(required=True)
 
+    @classmethod
+    async def createRecord(cls, reservation: NewCarReservationParams):
+        msg = Message()
+        crud = CRUD(cls=cls)
+        try:
+            userDoc = model.User.objects.get(id=reservation.user)
+            carDoc = model.Car.objects.get(id=reservation.car)
+            reservation = dict(reservation)
+            reservation['user'] = userDoc.id
+            reservation['car'] = carDoc.id
+            crud.create(reservation, msg)
+            return msg.data
+        except DoesNotExist:
+            raise
+        except ValidationError as e:
+            logging.error(str(e))
+            raise ValidationError
+        except Exception as e:
+            msg.addMessage('Error', str(e))
+            raise
+
 
 class Reservation(BaseDocument):
     user = ReferenceField(User)
     hotel_reservation = ListField(ReferenceField(RoomReservation))
     car_reservation = ListField(ReferenceField(CarReservation))
+    total = FloatField(min_value=1)
+    paid = BooleanField(default=False)
 
+    @classmethod
+    async def createRecord(cls, reservation: NewReservationParams, user: str):
+        msg = Message()
+        crud = CRUD(cls=cls)
+        try:
+            hotelDoc = model.RoomReservation.objects(id=reservation.user).all()
+            carDoc = model.CarReservation.objects(id=reservation.user).all()
+            userDoc = model.User.objects.get(id=user)
+            reservation = dict(reservation)
+            reservation['user'] = userDoc.id
+            reservation['hotel_reservation'] = list(map(lambda x: x.id, hotelDoc))
+            reservation['car_reservation'] = list(map(lambda x: x.id, carDoc))
+            crud.create(reservation, msg)
+            return msg.data
+        except DoesNotExist:
+            raise
+        except ValidationError as e:
+            logging.error(str(e))
+            raise ValidationError
+        except Exception as e:
+            msg.addMessage('Error', str(e))
+            raise

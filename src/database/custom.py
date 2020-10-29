@@ -1,3 +1,4 @@
+from __future__ import absolute_import
 from core.security.sanitizer import Sanitizer
 from core.security.authentication import get_hash
 from core.security.encryption import Cipher, EncryptedString, HashedString
@@ -38,7 +39,10 @@ class EncryptedStringField(StringField):
 
     def to_python(self, value):
         if value:
-            value = Cipher.decryptString(value)
+            try:
+                value = Cipher.decryptString(value)
+            except:
+                pass
         return value
 
 
@@ -83,7 +87,6 @@ class BaseDocument(gj.Document):
         except Exception as e:
             logging.error(str(e))
             raise
-
 
     @classmethod
     async def deleteRecord(cls, objectID: str) -> None:

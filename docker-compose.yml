@@ -9,3 +9,11 @@ services:
     ports:
       - "27017:27017"
     command: mongod
+  api:
+    build: .
+    container_name: API
+    command: python3 main.py
+    expose:
+      - "$API_PORT"
+    ports:
+      - "$API_PORT:$API_PORT"

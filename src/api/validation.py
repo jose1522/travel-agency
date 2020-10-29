@@ -3,6 +3,19 @@ from datetime import date
 from typing import Optional, List, Dict
 
 
+class CreditCard(BaseModel):
+    number: int
+    month: int
+    year: int
+    cvv: int
+    issuer: str
+    card_type: str
+
+
+class Transaction(CreditCard):
+    amount: float
+
+
 class UserParams(BaseModel):
     username: str
     password: str
@@ -92,6 +105,15 @@ class CarTypeParams(NewCarTypeParams):
     id: str
 
 
+class NewCarBrandParams(BaseModel):
+    name: str
+    origin_country: str
+
+
+class CarBrandParams(NewCarBrandParams):
+    id: str
+
+
 class NewCarParams(BaseModel):
     brand: str
     model: str
@@ -104,6 +126,38 @@ class NewCarParams(BaseModel):
 
 
 class CarParams(NewCarParams):
+    id: str
+
+
+class NewCarModelParams(BaseModel):
+    name: str
+    brand: str
+
+
+class CarModelParams(NewCarModelParams):
+    id: str
+
+
+class NewCarReservationParams(BaseModel):
+    user: str
+    car: str
+    start: date
+    end: date
+
+
+class CarReservationParams(NewCarReservationParams):
+    id: str
+
+
+class NewReservationParams(BaseModel):
+    user: str
+    hotel_reservation: List[str]
+    car_reservation: List[str]
+    total: float
+    paid: Optional[bool]
+
+
+class ReservationParamsParams(NewReservationParams):
     id: str
 
 
