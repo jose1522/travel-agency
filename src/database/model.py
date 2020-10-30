@@ -21,7 +21,7 @@ class User(BaseDocument):
 
     meta = {
         'indexes': ['username'],
-        'exclude_from_update': ['username', 'password']
+        'exclude_from_update': ['isAdmin', 'active', 'createdOn', 'deletedOn']
     }
 
     @classmethod
@@ -43,10 +43,12 @@ class User(BaseDocument):
             raise
 
     @classmethod
-    async def updateRecord(cls, currentUser, newData: UserParams):
+    async def updateRecord(cls, currentUser, newData: dict):
         msg = Message()
         crud = CRUD(cls=cls)
         try:
+            if "password" in newData:
+                newData['password'] = get_hash(newData['password'])
             currentUser = dict(currentUser)
             query = {"username": currentUser.get('username')}
             exclude = cls._meta.get("exclude_from_update", [])
@@ -71,7 +73,7 @@ class User(BaseDocument):
             query = {"username": currentUser.get('username'), 'active': True}
             crud.read(query=query)
             crud.delete(msg)
-            await UserInfo.deleteRecord(crud.documents.id)
+            await UserInfo.deleteRecord(crud.documents[0].id)
             return msg.data
         except DoesNotExist:
             raise
@@ -142,7 +144,7 @@ class UserInfo(BaseDocument):
 
     meta = {
         'indexes': ['user_id'],
-        'exclude_from_update': ['user_id', 'id']
+        'exclude_from_update': ['user_id', 'id', 'active', 'createdOn', 'deletedOn']
     }
 
     @classmethod
@@ -168,7 +170,10 @@ class UserInfo(BaseDocument):
             user = await User.searchUsername(user['username'])
             query = {"user_id": user['id'], 'active': True}
             data = cls.query(exclude=['user_id'], query=query)
-            data = data.to_dict()
+            if data is None:
+                raise DoesNotExist
+            else:
+                data = data.to_dict()
             return data
         except DoesNotExist:
             raise
@@ -238,14 +243,14 @@ class UserInfo(BaseDocument):
 
 class Hotel(BaseDocument):
     name = StringField(unique=True, required=True)
-    email = EmailField(required=True, unique=True, min_length=5, max_length=25)
+    email = EmailField(required=True, unique=True, min_length=5, max_length=50)
     address = StringField(required=True, max_length=200, min_length=10)
     point = PointField(required=True)
     phone = StringField(required=True, min_length=5, max_length=15)
     rating = IntField(required=True, max_value=5)
 
     meta = {
-        'indexes': ['$name', 'rating']
+        'indexes': ['$name', 'rating', 'active', 'createdOn', 'deletedOn']
     }
 
 
@@ -258,7 +263,7 @@ class RoomType(BaseDocument):
     description = StringField()
 
     meta = {
-        'exclude_from_update': ['hotel', 'id']
+        'exclude_from_update': ['hotel', 'id', 'active', 'createdOn', 'deletedOn']
     }
 
     @classmethod
@@ -278,6 +283,7 @@ class RoomType(BaseDocument):
             raise ValidationError
         except NotUniqueError as e:
             logging.error(str(e))
+            msg.addMessage('Error', str(e))
             raise
         except Exception as e:
             msg.addMessage('Error', str(e))
@@ -291,6 +297,10 @@ class Room(BaseDocument):
     available = BooleanField(default=True)
     # photos = ListField(ImageField(size=(800, 600, True), thumbnail_size=(100, 75, True)))
 
+    meta = {
+        'exclude_from_update': ['hotel', 'room_type', 'id', 'active', 'createdOn', 'deletedOn']
+    }
+
     @classmethod
     async def createRecord(cls, room: NewRoomParams):
         msg = Message()
@@ -302,9 +312,13 @@ class Room(BaseDocument):
             room['room_type'] = roomDoc.id
             room['hotel'] = hotelDoc.id
             crud.create(room, msg)
+        except NotUniqueError as e:
+            logging.error(str(e))
+            raise
         except Exception as e:
             msg.addMessage('Error', str(e))
-        finally:
+            return msg.data
+        else:
             return msg.data
 
 
@@ -315,11 +329,11 @@ class RoomReservation(BaseDocument):
     end = DateField(required=True)
 
     meta = {
-        'exclude_from_update': ['room']
+        'exclude_from_update': ['room', 'active', 'user', 'createdOn', 'deletedOn']
     }
 
     @classmethod
-    async def createRecord(cls, room: NewRoomReservationParams):
+    async def createRecord(cls, room: NewRoomReservationParams, userDoc: User):
         msg = Message()
         crud = CRUD(cls=cls)
         try:
@@ -328,10 +342,9 @@ class RoomReservation(BaseDocument):
                 raise RoomNotAvailableError
             else:
                 roomDoc.update(available=False)
-            userDoc = model.User.objects.get(id=room.user)
             room = dict(room)
             room['room'] = roomDoc.id
-            room['user'] = userDoc.id
+            room['user'] = userDoc['id']
             crud.create(room, msg)
             return msg.data
         except RoomNotAvailableError:
@@ -343,6 +356,7 @@ class RoomReservation(BaseDocument):
             raise ValidationError
         except NotUniqueError as e:
             logging.error(str(e))
+            msg.addMessage('Error', str(e))
             raise
         except Exception as e:
             msg.addMessage('Error', str(e))
@@ -356,7 +370,7 @@ class RoomReservation(BaseDocument):
             query = {"id": objectID, 'active': True}
             crud.read(query=query)
             crud.delete(msg)
-            roomDoc = Room.objects.get(id=crud.documents.room)
+            roomDoc = Room.objects.get(id=crud.documents[0].room.id)
             roomDoc.update(available=True)
             return msg.data
         except DoesNotExist:
@@ -369,24 +383,31 @@ class RoomReservation(BaseDocument):
 
 
 class CarType(BaseDocument):
-    name = StringField(required=True)
-    drive = StringField(required=True, choices=('4WD', '2WD'))
+    name = StringField(required=True, unique=True)
+    drive = StringField(required=True, choices=('4WD', '2WD'), unique_with=["category", "engine"])
     category = StringField(required=True, choices=('Hatchback', 'Sedan', 'SUV', 'Compact'))
     engine = StringField(required=True, choices=('Electric', 'Diesel', 'Gasoline'))
     capacity = IntField(default=5)
+
+    meta = {
+        'exclude_from_update': ['active', 'createdOn', 'deletedOn']
+    }
 
 
 class CarBrand(BaseDocument):
     name = StringField(required=True)
     origin_country = StringField(required=True)
+    meta = {
+        'exclude_from_update': ['active', 'createdOn', 'deletedOn']
+    }
 
 
 class CarModel(BaseDocument):
-    name = StringField(required=True)
+    name = StringField(required=True, unique_with=['brand'])
     brand = ReferenceField(CarBrand)
 
     meta = {
-        'exclude_from_update': ['brand']
+        'exclude_from_update': ['brand', 'active', 'createdOn', 'deletedOn']
     }
 
     @classmethod
@@ -406,6 +427,7 @@ class CarModel(BaseDocument):
             raise ValidationError
         except NotUniqueError as e:
             logging.error(str(e))
+            msg.addMessage('Error', str(e))
             raise
         except Exception as e:
             msg.addMessage('Error', str(e))
@@ -419,9 +441,13 @@ class Car(BaseDocument):
     color = StringField(required=True)
     year = IntField(required=True)
     millage = FloatField(required=True, min_value=0)
-    license_plate = StringField(required=True)
+    license_plate = StringField(required=True, unique=True)
     available = BooleanField(default=True)
     # photos = ListField(ImageField(size=(800, 600, True), thumbnail_size=(100, 75, True)))
+
+    meta = {
+        'exclude_from_update': ['brand', 'model', 'car_type', 'active', 'createdOn', 'deletedOn']
+    }
 
     @classmethod
     async def createRecord(cls, car: NewCarParams):
@@ -453,12 +479,15 @@ class CarReservation(BaseDocument):
     start = DateField(required=True)
     end = DateField(required=True)
 
+    meta = {
+        'exclude_from_update': ['user', 'car', 'active', 'createdOn', 'deletedOn']
+    }
     @classmethod
-    async def createRecord(cls, reservation: NewCarReservationParams):
+    async def createRecord(cls, reservation: NewCarReservationParams, user: dict):
         msg = Message()
         crud = CRUD(cls=cls)
         try:
-            userDoc = model.User.objects.get(id=reservation.user)
+            userDoc = model.User.objects.get(id=user['id'])
             carDoc = model.Car.objects.get(id=reservation.car)
             reservation = dict(reservation)
             reservation['user'] = userDoc.id
@@ -481,19 +510,32 @@ class Reservation(BaseDocument):
     car_reservation = ListField(ReferenceField(CarReservation))
     total = FloatField(min_value=1)
     paid = BooleanField(default=False)
+    meta = {
+        'exclude_from_update': ['user', 'active', 'createdOn', 'deletedOn']
+    }
 
     @classmethod
-    async def createRecord(cls, reservation: NewReservationParams, user: str):
+    async def createRecord(cls, reservation: NewReservationParams, user: dict):
         msg = Message()
         crud = CRUD(cls=cls)
         try:
-            hotelDoc = model.RoomReservation.objects(id=reservation.user).all()
-            carDoc = model.CarReservation.objects(id=reservation.user).all()
-            userDoc = model.User.objects.get(id=user)
+            hotelDoc = model.RoomReservation.query(
+                query={"id__in": reservation.hotel_reservation, "user": user["id"], 'active': True},
+            )
+            carDoc = model.CarReservation.query(
+                query={"id__in": reservation.car_reservation, "user": user["id"], 'active': True},
+            )
+            userDoc = model.User.objects.get(id=user['id'])
             reservation = dict(reservation)
             reservation['user'] = userDoc.id
-            reservation['hotel_reservation'] = list(map(lambda x: x.id, hotelDoc))
-            reservation['car_reservation'] = list(map(lambda x: x.id, carDoc))
+            if isinstance(hotelDoc, list):
+                reservation['hotel_reservation'] = list(map(lambda x: x.id, hotelDoc))
+            else:
+                reservation['hotel_reservation'] = [hotelDoc.id]
+            if isinstance(carDoc, list):
+                reservation['car_reservation'] = list(map(lambda x: x.id, carDoc))
+            else:
+                reservation['car_reservation'] = [carDoc.id]
             crud.create(reservation, msg)
             return msg.data
         except DoesNotExist:

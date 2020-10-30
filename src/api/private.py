@@ -16,8 +16,12 @@ async def get_user(user=Depends(check_jwt)):
 
 
 @private.put('/user', tags=['User'])
-async def update_user(data: UserParams, user=Depends(check_jwt)):
-    result = await model.User.updateRecord(user, data)
+async def update_user(data: UserUpdateParams, user=Depends(check_jwt)):
+    tempData = {}
+    for key, value in dict(data).items():
+        if value is not None:
+            tempData[key] = value
+    result = await model.User.updateRecord(user, tempData)
     return result
 
 
@@ -178,7 +182,7 @@ async def get_room(user=Depends(check_jwt),
 
 
 @private.put('/room', tags=['Room'])
-async def update_room(data: RoomParams, user=Depends(check_admin_jwt)):
+async def update_room(data: RoomUpdateParams, user=Depends(check_admin_jwt)):
     data = dict(data)
     result = await model.Room.updateRecord(**data)
     return result
@@ -195,7 +199,7 @@ async def delete_room(data: ObjectID, user=Depends(check_admin_jwt)):
 ################################################################
 @private.post('/room-reservation', tags=['Room Reservation'])
 async def new_room_reservation(data: NewRoomReservationParams, user=Depends(check_admin_jwt)):
-    result = await model.RoomReservation.createRecord(data)
+    result = await model.RoomReservation.createRecord(data, user)
     return result
 
 
@@ -208,7 +212,7 @@ async def get_room_reservation(user=Depends(check_jwt),
                                limit: Optional[int] = Query(None, title="Limit to (n) results"),
                                expand_field: Optional[List[str]] = Query(None, title="Show expanded field data")
                                ):
-    kwargs = {"user": user.id}
+    kwargs = {"user": user['id']}
     if room_reservation_id:
         kwargs["id"] = room_reservation_id
     if room_id:
@@ -245,7 +249,7 @@ async def new_car_type(data: NewCarTypeParams, user=Depends(check_admin_jwt)):
 async def get_car_type(user=Depends(check_jwt),
                        car_type_id: Optional[str] = Query(None, alias="id", title="Car Type Id", min_length=5),
                        name: Optional[str] = Query(None, title="Car Type Name", min_length=5),
-                       drive: Optional[str] = Query(None, title="Car Type Drive", min_length=5),
+                       drive: Optional[str] = Query(None, title="Car Type Drive", min_length=3),
                        category: Optional[str] = Query(None, title="Car Type Category", min_length=5),
                        engine: Optional[str] = Query(None, title="Car Type Engine", min_length=5),
                        skip: Optional[int] = Query(None, title="Skip (n) results"),
@@ -415,7 +419,7 @@ async def delete_car(data: ObjectID, user=Depends(check_admin_jwt)):
 ################################################################
 @private.post('/car-reservation', tags=['Car Reservation'])
 async def new_car_reservation(data: NewCarReservationParams, user=Depends(check_admin_jwt)):
-    result = await model.CarReservation.createRecord(data)
+    result = await model.CarReservation.createRecord(data, user)
     return result
 
 
@@ -430,7 +434,7 @@ async def get_car_reservation(user=Depends(check_jwt),
     if car_id:
         kwargs["id"] = car_id
     if user:
-        kwargs["user"] = user.id
+        kwargs["user"] = user['id']
     if car:
         kwargs["car"] = car
 
@@ -456,7 +460,7 @@ async def delete_car_reservation(data: ObjectID, user=Depends(check_jwt)):
 ################################################################
 @private.post('/reservation', tags=['Reservation'])
 async def new_reservation(data: NewReservationParams, user=Depends(check_admin_jwt)):
-    result = await model.Reservation.createRecord(data, user.id)
+    result = await model.Reservation.createRecord(data, user)
     return result
 
 
@@ -464,12 +468,12 @@ async def new_reservation(data: NewReservationParams, user=Depends(check_admin_j
 async def get_reservation(user=Depends(check_jwt),
                           reservation: Optional[str] = Query(None, alias="id", title="Car Brand ID", min_length=5),
                           skip: Optional[int] = Query(None, title="Skip (n) results"),
-                          limit: Optional[int] = Query(None, title="Limit to (n) results"),
-                          expand_field: Optional[List[str]] = Query(None, title="Show expanded field data")):
+                          limit: Optional[int] = Query(None, title="Limit to (n) results")
+                          ):
     kwargs = {}
     if reservation:
         kwargs["id"] = reservation
-    result = await model.Reservation.searchWithParams(skip, limit, expand=expand_field, **kwargs)
+    result = await model.Reservation.searchWithParams(skip, limit, **kwargs)
     return result
 
 

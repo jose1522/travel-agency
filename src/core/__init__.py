@@ -28,21 +28,21 @@ def create_app():
     async def validation_error_exception_handler(request: Request, exc: ValidationError):
         return JSONResponse(
             status_code=400,
-            content={"message": f"Oops! It looks like the information received didn't have the correct format."},
+            content={"message": f"Oops! It looks like the information received didn't have the correct format. {str(exc)}"},
         )
 
     @app.exception_handler(NotUniqueError)
     async def not_unique_exception_handler(request: Request, exc: NotUniqueError):
         return JSONResponse(
             status_code=400,
-            content={"message": f"Oops! It looks like you are submitting a duplicate value."},
+            content={"message": f"Oops! It looks like you are submitting a duplicate value. {str(exc)}"},
         )
 
     @app.exception_handler(RoomNotAvailableError)
-    async def not_unique_exception_handler(request: Request, exc: NotUniqueError):
+    async def not_unique_exception_handler(request: Request, exc: RoomNotAvailableError):
         return JSONResponse(
-            status_code=204,
-            content={"message": f"Oops! It looks like the room selected is no longer available."},
+            status_code=400,
+            content={"message": f"Oops! It looks like the room selected is no longer available. {str(exc)}"},
         )
 
     return app

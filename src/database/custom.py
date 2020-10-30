@@ -61,8 +61,10 @@ class BaseDocument(gj.Document):
         crud = CRUD(cls=cls)
         try:
             crud.create(kwargs, msg)
+            return msg.data
         except NotUniqueError as e:
             logging.error(str(e))
+            msg.addMessage('Error', str(e))
             raise
         except ValidationError as e:
             logging.error(str(e))

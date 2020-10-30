@@ -21,6 +21,12 @@ class UserParams(BaseModel):
     password: str
 
 
+class UserUpdateParams(UserParams):
+    username: Optional[str]
+    password: Optional[str]
+    isAdmin: Optional[bool]
+
+
 class UserInfoParams(BaseModel):
     identification: str
     full_name: str
@@ -78,12 +84,17 @@ class NewRoomParams(BaseModel):
     available: Optional[bool]
 
 
-class RoomParams(NewRoomParams):
+class RoomParams(BaseModel):
     id: str
 
 
+class RoomUpdateParams(NewRoomParams):
+    id: str
+    number: Optional[int]
+    available: Optional[bool]
+
+
 class NewRoomReservationParams(BaseModel):
-    user: str
     room: str
     start: date
     end: date
@@ -139,7 +150,6 @@ class CarModelParams(NewCarModelParams):
 
 
 class NewCarReservationParams(BaseModel):
-    user: str
     car: str
     start: date
     end: date
@@ -150,7 +160,6 @@ class CarReservationParams(NewCarReservationParams):
 
 
 class NewReservationParams(BaseModel):
-    user: str
     hotel_reservation: List[str]
     car_reservation: List[str]
     total: float
