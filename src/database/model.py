@@ -511,7 +511,7 @@ class Reservation(BaseDocument):
     total = FloatField(min_value=1)
     paid = BooleanField(default=False)
     meta = {
-        'exclude_from_update': ['user', 'active', 'createdOn', 'deletedOn']
+        'exclude_from_update': ['user', 'hotel_reservation', 'car_reservation', 'active', 'createdOn', 'deletedOn']
     }
 
     @classmethod
