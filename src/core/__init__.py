@@ -1,5 +1,6 @@
 from fastapi import FastAPI, Depends, Request
 from mongoengine import DoesNotExist, ValidationError, NotUniqueError
+from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 from database import RoomNotAvailableError
 from api.private import private
@@ -44,5 +45,13 @@ def create_app():
             status_code=400,
             content={"message": f"Oops! It looks like the room selected is no longer available. {str(exc)}"},
         )
+
+    app.add_middleware(
+        CORSMiddleware,
+        allow_origins=settings.ORIGINS,
+        allow_credentials=True,
+        allow_methods=["*"],
+        allow_headers=["*"],
+    )
 
     return app

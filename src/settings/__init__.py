@@ -5,6 +5,7 @@ from dotenv import load_dotenv
 class Settings:
     def __init__(self):
         load_dotenv()
+        self.ORIGINS = os.environ.get("ORIGINS").split(",")
         self.ACCESS_TOKEN = os.environ.get('ACCESS_TOKEN')
         self.MONGO_HOST = os.environ.get('MONGO_HOST')
         self.MONGO_DB = os.environ.get('MONGO_DB')
