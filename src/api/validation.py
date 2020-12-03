@@ -68,8 +68,14 @@ class NewHotelParams(BaseModel):
     rating: int
 
 
-class HotelParams(NewHotelParams):
+class HotelParams(BaseModel):
     id: str
+    name: str
+    email: str
+    address: str
+    point: Optional[List[float]]
+    phone: str
+    rating: int
 
 
 class NewRoomTypeParams(BaseModel):

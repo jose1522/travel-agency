@@ -32,7 +32,7 @@ async def delete_user(user=Depends(check_jwt)):
 
 
 ################################################################
-# User-related endpoints
+# User-Info related endpoints
 ################################################################
 @private.post('/user-info', tags=['User Info'])
 async def new_user_info(data: UserInfoParams, user=Depends(check_jwt)):
@@ -100,8 +100,9 @@ async def update_hotel(data: HotelParams, user=Depends(check_admin_jwt)):
 
 
 @private.delete('/hotel', tags=['Hotel'])
-async def delete_hotel(data: ObjectID, user=Depends(check_admin_jwt)):
-    result = await model.Hotel.deleteRecord(data.id)
+async def delete_hotel(user=Depends(check_admin_jwt),
+                       record_id: Optional[str] = Query(None, alias="id", title="Record ID to be deleted")):
+    result = await model.Hotel.deleteRecord(record_id)
     return result
 
 
@@ -143,8 +144,9 @@ async def update_room_type(data: RoomTypeParams, user=Depends(check_admin_jwt)):
 
 
 @private.delete('/room-type', tags=['Room Type'])
-async def delete_room_type(data: ObjectID, user=Depends(check_admin_jwt)):
-    result = await model.RoomType.deleteRecord(data.id)
+async def delete_room_type(user=Depends(check_admin_jwt),
+                           record_id: Optional[str] = Query(None, alias="id", title="Record ID to be deleted")):
+    result = await model.RoomType.deleteRecord(record_id)
     return result
 
 
@@ -189,8 +191,9 @@ async def update_room(data: RoomUpdateParams, user=Depends(check_admin_jwt)):
 
 
 @private.delete('/room', tags=['Room'])
-async def delete_room(data: ObjectID, user=Depends(check_admin_jwt)):
-    result = await model.Room.deleteRecord(data.id)
+async def delete_room(user=Depends(check_admin_jwt),
+                      record_id: Optional[str] = Query(None, alias="id", title="Record ID to be deleted")):
+    result = await model.Room.deleteRecord(record_id)
     return result
 
 
@@ -230,8 +233,9 @@ async def update_room_reservation(data: RoomReservationParams, user=Depends(chec
 
 
 @private.delete('/room-reservation', tags=['Room Reservation'])
-async def delete_room_reservation(data: ObjectID, user=Depends(check_admin_jwt)):
-    result = await model.RoomReservation.deleteRecord(data.id)
+async def delete_room_reservation(user=Depends(check_admin_jwt),
+                                  record_id: Optional[str] = Query(None, alias="id", title="Record ID to be deleted")):
+    result = await model.RoomReservation.deleteRecord(record_id)
     return result
 
 
@@ -279,8 +283,9 @@ async def update_car_type(data: CarTypeParams, user=Depends(check_admin_jwt)):
 
 
 @private.delete('/car-type', tags=['Car Type'])
-async def delete_car_type(data: ObjectID, user=Depends(check_admin_jwt)):
-    result = await model.CarType.deleteRecord(data.id)
+async def delete_car_type(user=Depends(check_admin_jwt),
+                          record_id: Optional[str] = Query(None, alias="id", title="Record ID to be deleted")):
+    result = await model.CarType.deleteRecord(record_id)
     return result
 
 
@@ -322,8 +327,9 @@ async def update_car_brand(data: CarBrandParams, user=Depends(check_admin_jwt)):
 
 
 @private.delete('/car-brand', tags=['Car Brand'])
-async def delete_car_brand(data: ObjectID, user=Depends(check_admin_jwt)):
-    result = await model.CarBrand.deleteRecord(data.id)
+async def delete_car_brand(user=Depends(check_admin_jwt),
+                           record_id: Optional[str] = Query(None, alias="id", title="Record ID to be deleted")):
+    result = await model.CarBrand.deleteRecord(record_id)
     return result
 
 
@@ -364,8 +370,9 @@ async def update_car_model(data: CarModelParams, user=Depends(check_admin_jwt)):
 
 
 @private.delete('/car-model', tags=['Car Model'])
-async def delete_car_model(data: ObjectID, user=Depends(check_admin_jwt)):
-    result = await model.CarModel.deleteRecord(data.id)
+async def delete_car_model(user=Depends(check_admin_jwt),
+                           record_id: Optional[str] = Query(None, alias="id", title="Record ID to be deleted")):
+    result = await model.CarModel.deleteRecord(record_id)
     return result
 
 
@@ -409,8 +416,9 @@ async def update_car(data: CarParams, user=Depends(check_admin_jwt)):
 
 
 @private.delete('/car', tags=['Car'])
-async def delete_car(data: ObjectID, user=Depends(check_admin_jwt)):
-    result = await model.Car.deleteRecord(data.id)
+async def delete_car(user=Depends(check_admin_jwt),
+                     record_id: Optional[str] = Query(None, alias="id", title="Record ID to be deleted")):
+    result = await model.Car.deleteRecord(record_id)
     return result
 
 
@@ -450,8 +458,9 @@ async def update_car_reservation(data: CarReservationParams, user=Depends(check_
 
 
 @private.delete('/car-reservation', tags=['Car Reservation'])
-async def delete_car_reservation(data: ObjectID, user=Depends(check_jwt)):
-    result = await model.CarReservation.deleteRecord(data.id)
+async def delete_car_reservation(user=Depends(check_jwt),
+                                 record_id: Optional[str] = Query(None, alias="id", title="Record ID to be deleted")):
+    result = await model.CarReservation.deleteRecord(record_id)
     return result
 
 
@@ -485,8 +494,9 @@ async def update_reservation(data: ReservationParamsParams, user=Depends(check_j
 
 
 @private.delete('/reservation', tags=['Reservation'])
-async def delete_reservation(data: ObjectID, user=Depends(check_jwt)):
-    result = await model.Reservation.deleteRecord(data.id)
+async def delete_reservation(user=Depends(check_jwt),
+                             record_id: Optional[str] = Query(None, alias="id", title="Record ID to be deleted")):
+    result = await model.Reservation.deleteRecord(record_id)
     return result
 
 
