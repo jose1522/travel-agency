@@ -25,8 +25,20 @@ async def authenticate(user: UserParams):
 
 
 @public.post('/user')
-async def new_user(user: UserParams):
-    result = await model.User.createRecord(user)
+async def new_user(user: NewUserParams):
+    userDataFields = list(UserParams.schema().get("properties").keys())
+    userInfoDataFields = list(UserInfoParams.schema().get("properties").keys())
+    userData = {}
+    userInfoData = {}
+    for key, value in dict(user).items():
+        if key in userDataFields:
+            userData[key] = value
+        if key in userInfoDataFields:
+            userInfoData[key] = value
+    result = await model.User.createRecord(userData)
+    userID = result.get("Created").get("id")
+    userData['id'] = userID
+    await model.UserInfo.createRecord(userInfoData, userData)
     return result
 
 

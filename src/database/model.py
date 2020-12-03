@@ -136,10 +136,12 @@ class User(BaseDocument):
 
 class UserInfo(BaseDocument):
     user_id = StringField(unique=True, required=True)
-    identification = EncryptedStringField(required=True, min_length=5, max_length=25)
-    full_name = EncryptedStringField(required=True, max_length=50, min_length=3)
+    identification = EncryptedStringField(min_length=5, max_length=25)
+    first_name = EncryptedStringField(required=True, max_length=50, min_length=3)
+    last_name = EncryptedStringField(required=True, max_length=50, min_length=3)
+    second_last_name = EncryptedStringField(max_length=50, min_length=3)
     email = EmailField(required=True, unique=True, min_length=5, max_length=100)
-    birthday = DateField(required=True)
+    birthday = DateField(default=datetime.today())
     phone = StringField(min_length=5, max_length=20)
 
     meta = {

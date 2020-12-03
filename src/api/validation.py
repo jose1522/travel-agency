@@ -28,22 +28,30 @@ class UserUpdateParams(UserParams):
 
 
 class UserInfoParams(BaseModel):
-    identification: str
-    full_name: str
+    identification: Optional[str]
+    first_name: str
+    last_name: str
+    second_last_name: str
     email: str
-    birthday: date
-    phone: str
+    birthday: Optional[date]
+    phone: Optional[str]
 
 
 class UserInfoGetOutput(BaseModel):
-    identification: str
-    full_name: str
+    identification: Optional[str]
+    first_name: str
+    last_name: str
+    second_last_name: Optional[str]
     email: str
-    birthday: str
-    phone: str
+    birthday: Optional[str]
+    phone: Optional[str]
     _createdOn: dict
     _active: bool
     _id: str
+
+
+class NewUserParams(UserInfoParams, UserParams):
+    pass
 
 
 class TokenParams(BaseModel):
