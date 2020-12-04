@@ -63,19 +63,13 @@ class NewHotelParams(BaseModel):
     name: str
     email: str
     address: str
-    point: List[float]
-    phone: str
-    rating: int
-
-
-class HotelParams(BaseModel):
-    id: str
-    name: str
-    email: str
-    address: str
     point: Optional[List[float]]
     phone: str
     rating: int
+
+
+class HotelParams(NewHotelParams):
+    id: str
 
 
 class NewRoomTypeParams(BaseModel):
