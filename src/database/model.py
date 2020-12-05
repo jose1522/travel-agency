@@ -246,7 +246,7 @@ class UserInfo(BaseDocument):
 class Hotel(BaseDocument):
     name = StringField(unique=True, required=True)
     email = EmailField(required=True, unique=True, min_length=5, max_length=50)
-    address = StringField(required=True, max_length=200, min_length=10)
+    address = StringField(required=True, max_length=200, min_length=2)
     point = PointField(default=[0,0])
     phone = StringField(required=True, min_length=5, max_length=15)
     rating = IntField(required=True, max_value=5)
