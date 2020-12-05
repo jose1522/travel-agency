@@ -75,7 +75,7 @@ class HotelParams(NewHotelParams):
 class NewRoomTypeParams(BaseModel):
     name: str
     hotel: str
-    amenities: List[str]
+    amenities: Optional[List[str]]
     price: float
     capacity: Optional[int]
     description: Optional[str]
@@ -151,6 +151,7 @@ class CarParams(NewCarParams):
 class NewCarModelParams(BaseModel):
     name: str
     brand: str
+    price: float
 
 
 class CarModelParams(NewCarModelParams):
