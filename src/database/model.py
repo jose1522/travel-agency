@@ -407,7 +407,7 @@ class CarBrand(BaseDocument):
 class CarModel(BaseDocument):
     name = StringField(required=True, unique_with=['brand'])
     brand = ReferenceField(CarBrand)
-    price = FloatField(max_value=0)
+    price = FloatField(min_value=0)
     meta = {
         'exclude_from_update': ['brand', 'active', 'createdOn', 'deletedOn']
     }
