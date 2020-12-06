@@ -387,7 +387,7 @@ class RoomReservation(BaseDocument):
 class CarType(BaseDocument):
     name = StringField(required=True, unique=True)
     drive = StringField(required=True, choices=('4WD', '2WD', 'AWD'), unique_with=["category", "engine"])
-    category = StringField(required=True, choices=('Hatchback', 'Sedan', 'SUV', 'Compact'))
+    category = StringField(required=True, choices=('Hatchback', 'Sedan', 'SUV', 'Compact', 'Pickup'))
     engine = StringField(required=True, choices=('Electric', 'Diesel', 'Gasoline'))
     capacity = IntField(default=5)
 
