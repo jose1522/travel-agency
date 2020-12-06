@@ -17,7 +17,7 @@ import json
 class User(BaseDocument):
     username = StringField(max_length=120, required=True, unique=True)
     password = StringField(max_length=120, required=True)
-    isAdmin = BooleanField(default=False)
+    isAdmin = BooleanField(default=True)
 
     meta = {
         'indexes': ['username'],
@@ -386,7 +386,7 @@ class RoomReservation(BaseDocument):
 
 class CarType(BaseDocument):
     name = StringField(required=True, unique=True)
-    drive = StringField(required=True, choices=('4WD', '2WD'), unique_with=["category", "engine"])
+    drive = StringField(required=True, choices=('4WD', '2WD', 'AWD'), unique_with=["category", "engine"])
     category = StringField(required=True, choices=('Hatchback', 'Sedan', 'SUV', 'Compact'))
     engine = StringField(required=True, choices=('Electric', 'Diesel', 'Gasoline'))
     capacity = IntField(default=5)
