@@ -33,6 +33,8 @@ services:
       - "80:80"
     volumes:
       - ./nginx/conf:/etc/nginx/conf.d
+      - ./certbot/conf:/etc/letsencrypt
+      - ./certbot/www:/var/www/certbot
   certbot:
     image: certbot/certbot
     volumes:
