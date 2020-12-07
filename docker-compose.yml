@@ -31,6 +31,7 @@ services:
     container_name: nginx
     ports:
       - "80:80"
+      - "443:443"
     volumes:
       - ./nginx/conf:/etc/nginx/conf.d
       - ./certbot/conf:/etc/letsencrypt
