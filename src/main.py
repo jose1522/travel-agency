@@ -21,8 +21,8 @@ def startAPI():
             workers=settings.API_WORKERS,
             reload=settings.API_RELOAD,
             ssl_version=ssl.PROTOCOL_SSLv23,
-            ssl_keyfile="./core/certs/rootCA-key.pem",
-            ssl_certfile="./core/certs/rootCA.pem"
+            ssl_keyfile="./certs/rootCA-key.pem",
+            ssl_certfile="./certs/rootCA.pem"
         )
 
 
